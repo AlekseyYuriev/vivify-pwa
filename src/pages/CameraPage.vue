@@ -1,7 +1,8 @@
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import { uid } from 'quasar';
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { uid, useQuasar } from 'quasar';
 import 'md-gum-polyfill';
+import { api } from 'src/boot/axios';
 
 const postData = reactive({
   id: uid(),
@@ -13,9 +14,16 @@ const postData = reactive({
 const imageCaptured = ref(false);
 const imageUpload = ref([]);
 const hasCameraSupport = ref(true);
+const locationLoading = ref(false);
+const $q = useQuasar();
 
 const video = ref(null);
 const canvas = ref(null);
+
+const locationSupported = computed(() => {
+  if ('geolocation' in navigator) return true;
+  return false;
+});
 
 const initCamera = () => {
   navigator.mediaDevices
@@ -100,6 +108,49 @@ const dataURItoBlob = (dataURI) => {
   return blob;
 };
 
+const getLocation = () => {
+  locationLoading.value = true;
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      getCityAndCountry(position);
+    },
+    (err) => {
+      locationError();
+    },
+    { timeout: 7000 }
+  );
+};
+
+const getCityAndCountry = (position) => {
+  let apiUrl = `https://geocode.xyz/${position.coords.latitude},${
+    position.coords.longitude
+  }?json=1&auth=${import.meta.env.VITE_GEOCODE_API_KEY}`;
+  api
+    .get(apiUrl)
+    .then((result) => {
+      locationSuccess(result);
+    })
+    .catch((error) => {
+      locationError();
+    });
+};
+
+const locationSuccess = (result) => {
+  postData.location = result.data.city;
+  if (result.data.country) {
+    postData.location += `, ${result.data.country}`;
+  }
+  locationLoading.value = false;
+};
+
+const locationError = () => {
+  $q.dialog({
+    title: 'Error',
+    message: 'Could not find your location',
+  });
+  locationLoading.value = false;
+};
+
 onMounted(() => {
   initCamera();
 });
@@ -158,12 +209,20 @@ onBeforeUnmount(() => {
       <div class="row justify-center q-ma-md">
         <q-input
           v-model="postData.location"
+          :loading="locationLoading"
           label="Location"
           class="col col-sm-6"
           dense
         >
           <template v-slot:append>
-            <q-btn round dense flat icon="eva-navigation-2-outline" />
+            <q-btn
+              v-if="!locationLoading && locationSupported"
+              @click="getLocation"
+              round
+              dense
+              flat
+              icon="eva-navigation-2-outline"
+            />
           </template>
         </q-input>
       </div>
