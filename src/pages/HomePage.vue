@@ -1,3 +1,43 @@
+<script setup>
+import { ref } from 'vue';
+import { date } from 'quasar';
+
+const posts = ref([
+  {
+    id: 1,
+    caption: 'Golden Gate Bridge',
+    date: 1749918577093,
+    location: 'Minsk, Belarus',
+    imageUrl: 'https://cdn.quasar.dev/img/parallax2.jpg',
+  },
+  {
+    id: 2,
+    caption: 'Golden Gate Bridge',
+    date: 1749918577093,
+    location: 'Minsk, Belarus',
+    imageUrl: 'https://cdn.quasar.dev/img/parallax2.jpg',
+  },
+  {
+    id: 3,
+    caption: 'Golden Gate Bridge',
+    date: 1749918577093,
+    location: 'Minsk, Belarus',
+    imageUrl: 'https://cdn.quasar.dev/img/parallax2.jpg',
+  },
+  {
+    id: 4,
+    caption: 'Golden Gate Bridge',
+    date: 1749918577093,
+    location: 'Minsk, Belarus',
+    imageUrl: 'https://cdn.quasar.dev/img/parallax2.jpg',
+  },
+]);
+
+const formattedDate = (value) => {
+  return date.formatDate(value, 'MMMM D h:mmA');
+};
+</script>
+
 <template>
   <q-page class="constrain q-pa-md">
     <div class="row q-col-gutter-lg">
@@ -53,46 +93,6 @@
     </div>
   </q-page>
 </template>
-
-<script setup>
-import { ref } from 'vue';
-import { date } from 'quasar';
-
-const posts = ref([
-  {
-    id: 1,
-    caption: 'Golden Gate Bridge',
-    date: 1749918577093,
-    location: 'Minsk, Belarus',
-    imageUrl: 'https://cdn.quasar.dev/img/parallax2.jpg',
-  },
-  {
-    id: 2,
-    caption: 'Golden Gate Bridge',
-    date: 1749918577093,
-    location: 'Minsk, Belarus',
-    imageUrl: 'https://cdn.quasar.dev/img/parallax2.jpg',
-  },
-  {
-    id: 3,
-    caption: 'Golden Gate Bridge',
-    date: 1749918577093,
-    location: 'Minsk, Belarus',
-    imageUrl: 'https://cdn.quasar.dev/img/parallax2.jpg',
-  },
-  {
-    id: 4,
-    caption: 'Golden Gate Bridge',
-    date: 1749918577093,
-    location: 'Minsk, Belarus',
-    imageUrl: 'https://cdn.quasar.dev/img/parallax2.jpg',
-  },
-]);
-
-const formattedDate = (value) => {
-  return date.formatDate(value, 'MMMM D h:mmA');
-};
-</script>
 
 <style lang="sass">
 .card-post

@@ -44,8 +44,6 @@
   </q-layout>
 </template>
 
-<script setup></script>
-
 <style lang="sass">
 .q-toolbar
   @media (min-width: $breakpoint-sm-min)
