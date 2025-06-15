@@ -11,8 +11,10 @@
     "deploy": "heroku builds:create -a vivify-backend"
   },
   "dependencies": {
+    "busboy": "^1.6.0",
     "express": "^5.1.0",
     "firebase-admin": "^13.4.0",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "uuid-v4": "^0.1.0"
   }
 }
