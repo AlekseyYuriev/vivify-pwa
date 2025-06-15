@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { date, useQuasar } from 'quasar';
-import axios from 'axios';
+import { api } from 'boot/axios';
 
 const $q = useQuasar();
 const posts = ref([]);
@@ -9,8 +9,8 @@ const loadingPosts = ref(false);
 
 const getPosts = () => {
   loadingPosts.value = true;
-  axios
-    .get('http://localhost:3000/posts')
+  api
+    .get('/posts')
     .then((response) => {
       posts.value = response.data;
     })

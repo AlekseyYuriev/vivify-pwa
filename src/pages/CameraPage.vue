@@ -1,8 +1,13 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { uid, useQuasar } from 'quasar';
 import 'md-gum-polyfill';
-import { api } from 'src/boot/axios';
+import axios from 'axios';
+import { api } from 'boot/axios';
+
+const router = useRouter();
+const $q = useQuasar();
 
 const postData = reactive({
   id: uid(),
@@ -15,7 +20,6 @@ const imageCaptured = ref(false);
 const imageUpload = ref([]);
 const hasCameraSupport = ref(true);
 const locationLoading = ref(false);
-const $q = useQuasar();
 
 const video = ref(null);
 const canvas = ref(null);
@@ -122,11 +126,16 @@ const getLocation = () => {
 };
 
 const getCityAndCountry = (position) => {
-  let apiUrl = `https://geocode.xyz/${position.coords.latitude},${
-    position.coords.longitude
-  }?json=1&auth=${import.meta.env.VITE_GEOCODE_API_KEY}`;
-  api
-    .get(apiUrl)
+  axios
+    .get(
+      `https://geocode.xyz/${position.coords.latitude},${position.coords.longitude}`,
+      {
+        params: {
+          json: 1,
+          auth: import.meta.env.VITE_GEOCODE_API_KEY,
+        },
+      }
+    )
     .then((result) => {
       locationSuccess(result);
     })
@@ -149,6 +158,37 @@ const locationError = () => {
     message: 'Could not find your location',
   });
   locationLoading.value = false;
+};
+
+const addPost = () => {
+  $q.loading.show({});
+
+  const formData = new FormData();
+  formData.append('id', postData.id);
+  formData.append('caption', postData.caption);
+  formData.append('location', postData.location);
+  formData.append('date', postData.date);
+  formData.append('file', postData.photo, postData.id + '.png');
+
+  api
+    .post('/createPost', formData)
+    .then((response) => {
+      router.push('/');
+      $q.notify({
+        message: 'Post created.',
+        actions: [{ label: 'Dismiss', color: 'white' }],
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      $q.dialog({
+        title: 'Error',
+        message: 'Sorry, could not create post!',
+      });
+    })
+    .finally(() => {
+      $q.loading.hide();
+    });
 };
 
 onMounted(() => {
@@ -181,6 +221,7 @@ onBeforeUnmount(() => {
       <q-btn
         v-if="hasCameraSupport"
         @click="captureImage"
+        :disable="imageCaptured"
         round
         color="grey-10"
         icon="eva-camera"
@@ -201,7 +242,7 @@ onBeforeUnmount(() => {
       <div class="row justify-center q-ma-md">
         <q-input
           v-model="postData.caption"
-          label="Caption"
+          label="Caption *"
           class="col col-sm-6"
           dense
         />
@@ -227,7 +268,14 @@ onBeforeUnmount(() => {
         </q-input>
       </div>
       <div class="row justify-center q-mt-lg">
-        <q-btn unelevated rounded color="primary" label="Post Image" />
+        <q-btn
+          @click="addPost()"
+          :disable="!postData.caption || !postData.photo"
+          unelevated
+          rounded
+          color="primary"
+          label="Post Image"
+        />
       </div>
     </div>
   </q-page>
