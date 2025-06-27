@@ -1,4 +1,4 @@
-# Vivify App (vivify)
+# Vivify PWA
 
 Bring your moments to life. Capture and share photos with friends in a simple, beautiful feed focused on genuine connection.
 

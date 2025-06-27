@@ -38,13 +38,11 @@
       </q-tabs>
     </q-footer>
 
-    <q-page-container>
+    <q-page-container class="bg-grey-1">
       <router-view />
     </q-page-container>
   </q-layout>
 </template>
-
-<script setup></script>
 
 <style lang="sass">
 .q-toolbar
