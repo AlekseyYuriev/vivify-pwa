@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { date, useQuasar } from 'quasar';
+import { openDB } from 'idb';
 import { api } from 'boot/axios';
 
 const $q = useQuasar();
@@ -22,7 +23,45 @@ const getPosts = () => {
     })
     .finally(() => {
       loadingPosts.value = false;
+      if (!navigator.onLine) {
+        getOfflinePosts();
+      }
     });
+};
+
+const getOfflinePosts = async () => {
+  try {
+    let db = await openDB('workbox-background-sync');
+    let failedRequests = await db.getAll('requests');
+
+    failedRequests.forEach((failedRequest) => {
+      if (failedRequest.queueName == 'createPostQueue') {
+        let request = new Request(
+          failedRequest.requestData.url,
+          failedRequest.requestData
+        );
+        request.formData().then((formData) => {
+          let offlinePost = {};
+
+          offlinePost.id = formData.get('id');
+          offlinePost.caption = formData.get('caption');
+          offlinePost.location = formData.get('location');
+          offlinePost.date = parseInt(formData.get('date'));
+          offlinePost.offline = true;
+
+          let reader = new FileReader();
+
+          reader.readAsDataURL(formData.get('file'));
+          reader.onloadend = () => {
+            offlinePost.imageUrl = reader.result;
+            posts.value.unshift(offlinePost);
+          };
+        });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const formattedDate = (value) => {
@@ -43,9 +82,17 @@ onMounted(() => {
             v-for="post in posts"
             :key="post.id"
             class="card-post q-mb-md"
+            :class="{ 'bg-red-1': post.offline }"
             flat
             bordered
           >
+            <q-badge
+              v-if="post.offline"
+              color="red"
+              class="badge-offline absolute-top-right"
+            >
+              Stored offline
+            </q-badge>
             <q-item>
               <q-item-section avatar>
                 <q-avatar>
@@ -137,6 +184,8 @@ onMounted(() => {
 
 <style lang="sass">
 .card-post
+  .badge-offline
+    border-top-left-radius: 0 !important
   .q-img
     min-height: 200px
 </style>

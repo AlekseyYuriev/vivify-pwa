@@ -29,6 +29,10 @@ const locationSupported = computed(() => {
   return false;
 });
 
+const backgroundSyncSupported = computed(() =>
+  'serviceWorker' in navigator && 'SyncManager' in window ? true : false
+);
+
 const initCamera = () => {
   navigator.mediaDevices
     .getUserMedia({
@@ -181,10 +185,15 @@ const addPost = () => {
     })
     .catch((err) => {
       console.log(err);
-      $q.dialog({
-        title: 'Error',
-        message: 'Sorry, could not create post!',
-      });
+      if (!navigator.onLine && backgroundSyncSupported.value) {
+        $q.notify('Post created offline.');
+        router.push('/');
+      } else {
+        $q.dialog({
+          title: 'Error',
+          message: 'Sorry, could not create post!',
+        });
+      }
     })
     .finally(() => {
       $q.loading.hide();
