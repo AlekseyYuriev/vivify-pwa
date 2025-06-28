@@ -2,13 +2,14 @@
   "name": "vivify",
   "version": "0.0.1",
   "description": "Bring your moments to life. Capture and share photos with friends in a simple, beautiful feed focused on genuine connection.",
-  "productName": "Vivify App",
+  "productName": "Vivify",
   "author": "Aleksey Yuriev <alex11-90@yandex.by>",
   "type": "module",
   "private": true,
   "scripts": {
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
+    "pw": "quasar dev -m pwa",
     "build": "quasar build",
     "postinstall": "quasar prepare"
   },
@@ -17,13 +18,22 @@
     "axios": "^1.2.1",
     "md-gum-polyfill": "^1.0.0",
     "quasar": "^2.16.0",
+    "register-service-worker": "^1.7.2",
     "vue": "^3.4.18",
     "vue-router": "^4.0.0"
   },
   "devDependencies": {
     "@quasar/app-vite": "^2.1.0",
     "autoprefixer": "^10.4.2",
-    "postcss": "^8.4.14"
+    "postcss": "^8.4.14",
+    "prettier": "^3.6.2",
+    "workbox-build": "^7.3.0",
+    "workbox-cacheable-response": "^7.3.0",
+    "workbox-core": "^7.3.0",
+    "workbox-expiration": "^7.3.0",
+    "workbox-precaching": "^7.3.0",
+    "workbox-routing": "^7.3.0",
+    "workbox-strategies": "^7.3.0"
   },
   "engines": {
     "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",

@@ -1,3 +1,46 @@
+<script setup>
+import { onMounted, ref } from 'vue';
+import { useQuasar } from 'quasar';
+
+let deferredPrompt;
+const $q = useQuasar();
+
+const showAppInstallBanner = ref(false);
+
+const installApp = async () => {
+  // Hide the app provided install promotion
+  showAppInstallBanner.value = false;
+  // Show the install prompt
+  deferredPrompt.prompt();
+  // Wait for the user to respond to the prompt
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    neverShowAppInstallBanner();
+  }
+};
+
+const neverShowAppInstallBanner = () => {
+  showAppInstallBanner.value = false;
+  $q.localStorage.set('neverShowAppInstallBanner', true);
+};
+
+onMounted(() => {
+  // Check if user chose "Never"
+  if ($q.localStorage.getItem('neverShowAppInstallBanner')) return;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    // Update UI notify the user they can install the PWA
+    setTimeout(() => {
+      showAppInstallBanner.value = true;
+    }, 3000);
+  });
+});
+</script>
+
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header class="bg-white text-grey-10" bordered>
@@ -27,9 +70,52 @@
       </q-toolbar>
     </q-header>
 
-    <q-footer class="bg-white small-screen-only" bordered>
+    <q-footer class="bg-white" bordered>
+      <transition
+        appear
+        enter-active-class="animated fadeIn"
+        leave-active-class="animated fadeOut"
+      >
+        <div v-if="showAppInstallBanner" class="banner-container bg-primary">
+          <div class="constrain">
+            <q-banner inline-actions dense class="bg-primary text-white">
+              <template v-slot:avatar>
+                <q-avatar size="40px">
+                  <img src="icons/android/android-launchericon-96-96.png" />
+                </q-avatar>
+              </template>
+
+              <b>Install Vivify?</b>
+
+              <template v-slot:action>
+                <q-btn
+                  @click="installApp"
+                  flat
+                  dense
+                  label="Yes"
+                  class="q-px-sm"
+                />
+                <q-btn
+                  @click="showAppInstallBanner = false"
+                  flat
+                  dense
+                  label="Later"
+                  class="q-px-sm"
+                />
+                <q-btn
+                  @click="neverShowAppInstallBanner"
+                  flat
+                  dense
+                  label="Never"
+                  class="q-px-sm"
+                />
+              </template>
+            </q-banner>
+          </div>
+        </div>
+      </transition>
       <q-tabs
-        class="text-grey-10"
+        class="text-grey-10 small-screen-only"
         active-color="primary"
         indicator-color="transparent"
       >
