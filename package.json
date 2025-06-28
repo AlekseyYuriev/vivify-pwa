@@ -11,7 +11,9 @@
     "dev": "quasar dev",
     "pw": "quasar dev -m pwa",
     "build": "quasar build",
-    "postinstall": "quasar prepare"
+    "build-pwa": "quasar build -m pwa",
+    "postinstall": "quasar prepare",
+    "deploy": "quasar build -m pwa && firebase deploy"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
