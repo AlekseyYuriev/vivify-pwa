@@ -201,6 +201,11 @@ const addPost = () => {
     })
     .finally(() => {
       $q.loading.hide();
+      if ($q.platform.is.safari) {
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      }
     });
 };
 
