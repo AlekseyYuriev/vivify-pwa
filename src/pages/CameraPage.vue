@@ -157,9 +157,14 @@ const locationSuccess = (result) => {
 };
 
 const locationError = () => {
+  let locationErrorMessage = 'Could not find your location.';
+  if ($q.platform.is.ios) {
+    locationErrorMessage +=
+      ' You might be able to fix this in System Preferences > Security & Privacy > Location Services';
+  }
   $q.dialog({
     title: 'Error',
-    message: 'Could not find your location',
+    message: locationErrorMessage,
   });
   locationLoading.value = false;
 };
