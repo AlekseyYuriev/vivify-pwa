@@ -3,13 +3,19 @@ import { ref, onMounted, computed, onActivated } from 'vue';
 import { date, useQuasar } from 'quasar';
 import { openDB } from 'idb';
 import { api } from 'boot/axios';
+import qs from 'qs';
 
 const $q = useQuasar();
 const posts = ref([]);
 const loadingPosts = ref(false);
+const showNotificationsBanner = ref(false);
 
 const seviceWorkerSupported = computed(() =>
   'serviceWorker' in navigator ? true : false
+);
+
+const pushNotificationsSupported = computed(() =>
+  'PushManager' in window ? true : false
 );
 
 const getPosts = () => {
@@ -86,17 +92,166 @@ const formattedDate = (value) => {
   return date.formatDate(value, 'MMMM D h:mmA');
 };
 
+const initNotificationsBanner = () => {
+  if (!$q.localStorage.getItem('neverShowNotificationsBanner')) {
+    showNotificationsBanner.value = true;
+  }
+};
+
+const enableNotifications = async () => {
+  if (pushNotificationsSupported.value) {
+    Notification.requestPermission((result) => {
+      neverShowNotificationsBanner();
+      if (result === 'granted') {
+        // displayGrantedNotification();
+        checkForExistingPushSubscription();
+      }
+    });
+  }
+};
+
+const checkForExistingPushSubscription = () => {
+  if (seviceWorkerSupported.value && pushNotificationsSupported.value) {
+    let reg;
+    navigator.serviceWorker.ready
+      .then((swreg) => {
+        reg = swreg;
+        return swreg.pushManager.getSubscription();
+      })
+      .then((sub) => {
+        if (!sub) {
+          createPushSubscription(reg);
+        }
+      });
+  }
+};
+
+const createPushSubscription = (reg) => {
+  reg.pushManager
+    .subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY,
+    })
+    .then((sub) => {
+      let newSubData = sub.toJSON();
+      let newSubDataQS = qs.stringify(newSubData);
+
+      return api.post(`/createSubscription?${newSubDataQS}`);
+    })
+    .then((response) => {
+      displayGrantedNotification();
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};
+
+const displayGrantedNotification = () => {
+  // new Notification('You are ow subscribed to notifications', {
+  //   body: 'Thanks for subscribing!',
+  //   icon: 'icons/android/android-launchericon-96-96.png',
+  //   image: 'icons/windows11/Wide310x150Logo.scale-100.png',
+  //   badge: 'icons/android/android-launchericon-96-96.png',
+  //   dir: 'ltr',
+  //   lang: 'en-US',
+  //   vibrate: [100, 50, 200],
+  //   tag: 'confirm-notification',
+  //   renotify: true,
+  // });
+
+  if (seviceWorkerSupported.value && pushNotificationsSupported.value) {
+    navigator.serviceWorker.ready.then((swreg) => {
+      swreg.showNotification('You are now subscribed to notifications', {
+        body: 'Thanks for subscribing!',
+        icon: 'icons/android/android-launchericon-96-96.png',
+        image: 'icons/windows11/Wide310x150Logo.scale-100.png',
+        badge: 'icons/android/android-launchericon-96-96.png',
+        dir: 'ltr',
+        lang: 'en-US',
+        vibrate: [100, 50, 200],
+        tag: 'confirm-notification',
+        renotify: true,
+        actions: [
+          {
+            action: 'hello',
+            title: 'Hello',
+            icon: 'icons/android/android-launchericon-96-96.png',
+          },
+          {
+            action: 'goodbye',
+            title: 'Goodbye',
+            icon: 'icons/android/android-launchericon-96-96.png',
+          },
+        ],
+      });
+    });
+  }
+};
+
+const neverShowNotificationsBanner = () => {
+  showNotificationsBanner.value = false;
+  $q.localStorage.set('neverShowNotificationsBanner', true);
+};
+
 onActivated(() => {
   getPosts();
 });
 
 onMounted(() => {
   listenForOfflinePostUploaded();
+  initNotificationsBanner();
 });
 </script>
 
 <template>
   <q-page class="constrain q-pa-md">
+    <transition
+      appear
+      enter-active-class="animated fadeIn"
+      leave-active-class="animated fadeOut"
+    >
+      <div
+        v-if="showNotificationsBanner && pushNotificationsSupported"
+        class="banner-container bg-primary"
+      >
+        <div class="constrain">
+          <q-banner class="bg-grey-3 q-mb-md">
+            <template v-slot:avatar>
+              <q-icon name="eva-bell-outline" color="primary" size="32px" />
+            </template>
+
+            Would you like to enable notifications?
+
+            <template v-slot:action>
+              <q-btn
+                @click="enableNotifications"
+                flat
+                dense
+                label="Yes"
+                color="primary"
+                class="q-px-sm"
+              />
+              <q-btn
+                @click="showNotificationsBanner = false"
+                flat
+                dense
+                label="Later"
+                color="primary"
+                class="q-px-sm"
+              />
+              <q-btn
+                @click="neverShowNotificationsBanner"
+                flat
+                dense
+                label="Never"
+                color="primary"
+                class="q-px-sm"
+              />
+            </template>
+          </q-banner>
+        </div>
+      </div>
+    </transition>
     <div class="row q-col-gutter-lg">
       <div class="col-12 col-sm-8">
         <template v-if="!loadingPosts && posts.length">

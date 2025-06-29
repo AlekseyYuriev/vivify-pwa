@@ -10,6 +10,7 @@ const path = require('path');
 const os = require('os');
 const fs = require('fs');
 const UUID = require('uuid-v4');
+const webpush = require('web-push');
 require('dotenv').config();
 
 /**
@@ -29,6 +30,16 @@ initializeApp({
 
 const db = getFirestore();
 const bucket = getStorage().bucket();
+
+/**
+ * config - webpush
+ */
+
+webpush.setVapidDetails(
+  'mailto:test@test.com',
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 /**
  * endpoint - posts
@@ -102,11 +113,104 @@ app.post('/createPost', (request, response) => {
           imageUrl: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`,
         })
         .then(() => {
+          sendPushNotification();
           response.send('Post added: ' + fields.id);
+        });
+    }
+
+    function sendPushNotification() {
+      let subscriptions = [];
+      db.collection('subscriptions')
+        .get()
+        .then((snapshot) => {
+          snapshot.forEach((doc) => {
+            subscriptions.push(doc.data());
+          });
+          return subscriptions;
+        })
+        .then((subscriptions) => {
+          subscriptions.forEach((subscription) => {
+            const pushSubscription = {
+              endpoint: subscription.endpoint,
+              keys: {
+                auth: subscription['keys[auth]'] || subscription.keys?.auth,
+                p256dh:
+                  subscription['keys[p256dh]'] || subscription.keys?.p256dh,
+              },
+            };
+
+            let pushContent = {
+              title: 'New Vivify Post!',
+              body: 'A new post has been added! Check it out!',
+              openUrl: '/',
+            };
+
+            let payload = JSON.stringify(pushContent);
+
+            webpush
+              .sendNotification(pushSubscription, payload)
+              .then(() => {
+                console.log('Push notification sent successfully');
+              })
+              .catch((error) => {
+                console.log('Push notification failed:', error);
+
+                // If subscription is expired/invalid (410), remove it from database
+                if (error.statusCode === 410) {
+                  // Remove the expired subscription from Firestore
+                  db.collection('subscriptions')
+                    .where('endpoint', '==', subscription.endpoint)
+                    .get()
+                    .then((snapshot) => {
+                      snapshot.forEach((doc) => {
+                        doc.ref.delete().then(() => {
+                          console.log(
+                            'Expired subscription removed from database'
+                          );
+                        });
+                      });
+                    });
+                }
+              });
+          });
         });
     }
   });
   request.pipe(bb);
+});
+
+/**
+ * endpoint - createSubscription
+ */
+app.post('/createSubscription', (request, response) => {
+  response.set('Access-Control-Allow-Origin', '*');
+
+  const subscriptionData = request.query;
+
+  // Check if subscription already exists
+  db.collection('subscriptions')
+    .where('endpoint', '==', subscriptionData.endpoint)
+    .get()
+    .then((snapshot) => {
+      if (snapshot.empty) {
+        // Add new subscription
+        return db.collection('subscriptions').add(subscriptionData);
+      } else {
+        // Update existing subscription
+        const doc = snapshot.docs[0];
+        return doc.ref.update(subscriptionData);
+      }
+    })
+    .then((docRef) => {
+      response.send({
+        message: 'Subscription saved successfully',
+        postData: subscriptionData,
+      });
+    })
+    .catch((error) => {
+      console.error('Error saving subscription:', error);
+      response.status(500).send({ error: 'Failed to save subscription' });
+    });
 });
 
 /**

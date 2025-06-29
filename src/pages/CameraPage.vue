@@ -184,7 +184,6 @@ const addPost = () => {
       });
     })
     .catch((err) => {
-      console.log(err);
       if (!navigator.onLine && backgroundSyncSupported.value) {
         $q.notify('Post created offline.');
         router.push('/');

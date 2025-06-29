@@ -95,25 +95,69 @@ if (backgroundSyncSupported) {
   });
 }
 
-/*
-self.skipWaiting();
-clientsClaim();
+//events - push
+self.addEventListener('push', (event) => {
+  if (event.data) {
+    let data = JSON.parse(event.data.text());
+    event.waitUntil(
+      self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: 'icons/android/android-launchericon-96-96.png',
+        badge: 'icons/android/android-launchericon-96-96.png',
+        data: {
+          openUrl: data.openUrl,
+        },
+      })
+    );
+  }
+});
 
-cleanupOutdatedCaches();
+//events - notifications
+self.addEventListener('notificationclick', (event) => {
+  let notification = event.notification;
+  let action = event.action;
 
-// Non-SSR fallbacks to index.html
-// Production SSR fallbacks to offline.html (except for dev)
-if (process.env.MODE !== 'ssr' || process.env.PROD) {
-  registerRoute(
-    new NavigationRoute(
-      createHandlerBoundToURL(process.env.PWA_FALLBACK_HTML),
-      {
-        denylist: [
-          new RegExp(process.env.PWA_SERVICE_WORKER_REGEX),
-          /workbox-(.)*\.js$/,
-        ],
-      }
-    )
-  );
-}
-*/
+  notification.close();
+
+  if (action === 'hello') {
+    console.log('hello button clicked');
+    return;
+  }
+
+  if (action === 'goodbye') {
+    console.log('goodbye button clicked');
+    return;
+  }
+
+  const openWindowPromise = (async () => {
+    // Use the URL from the push data, but have a fallback to the root URL.
+    const urlToOpen = notification.data?.openUrl || '/';
+
+    // Get a list of all open app windows/tabs.
+    const allClients = await clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true,
+    });
+
+    // Try to find a visible window to focus.
+    const clientToFocus = allClients.find(
+      (client) => client.visibilityState === 'visible'
+    );
+
+    if (clientToFocus) {
+      // If we found a visible window, navigate it to the correct URL and focus it.
+      await clientToFocus.navigate(urlToOpen);
+      return clientToFocus.focus();
+    } else {
+      // If we didn't find a visible window, open a new one.
+      return clients.openWindow(urlToOpen);
+    }
+  })();
+
+  // ensures the service worker stays alive until the promise resolves.
+  event.waitUntil(openWindowPromise);
+});
+
+self.addEventListener('notificationclose', (event) => {
+  console.log('Notification closed', event);
+});
