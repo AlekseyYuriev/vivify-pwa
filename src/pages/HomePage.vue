@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, onActivated } from 'vue';
 import { date, useQuasar } from 'quasar';
 import { openDB } from 'idb';
 import { api } from 'boot/axios';
@@ -7,6 +7,10 @@ import { api } from 'boot/axios';
 const $q = useQuasar();
 const posts = ref([]);
 const loadingPosts = ref(false);
+
+const seviceWorkerSupported = computed(() =>
+  'serviceWorker' in navigator ? true : false
+);
 
 const getPosts = () => {
   loadingPosts.value = true;
@@ -35,7 +39,7 @@ const getOfflinePosts = async () => {
     let failedRequests = await db.getAll('requests');
 
     failedRequests.forEach((failedRequest) => {
-      if (failedRequest.queueName == 'createPostQueue') {
+      if (failedRequest.queueName === 'createPostQueue') {
         let request = new Request(
           failedRequest.requestData.url,
           failedRequest.requestData
@@ -64,12 +68,30 @@ const getOfflinePosts = async () => {
   }
 };
 
+const listenForOfflinePostUploaded = () => {
+  if (seviceWorkerSupported.value) {
+    const channel = new BroadcastChannel('sw-messages');
+    channel.addEventListener('message', (event) => {
+      if (event.data.msg === 'offline-post-uploaded') {
+        let offlinePostCount = posts.value.filter(
+          (post) => post.offline === true
+        ).length;
+        posts.value[offlinePostCount - 1].offline = false;
+      }
+    });
+  }
+};
+
 const formattedDate = (value) => {
   return date.formatDate(value, 'MMMM D h:mmA');
 };
 
-onMounted(() => {
+onActivated(() => {
   getPosts();
+});
+
+onMounted(() => {
+  listenForOfflinePostUploaded();
 });
 </script>
 
