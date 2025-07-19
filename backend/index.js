@@ -71,6 +71,7 @@ app.post('/createPost', (request, response) => {
 
   let fields = {};
   let fileData = {};
+  let imageUrl;
 
   bb.on('file', (name, file, info) => {
     const { filename, encoding, mimetype } = info;
@@ -103,6 +104,8 @@ app.post('/createPost', (request, response) => {
     );
 
     function createDocument(uploadedFile) {
+      imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`;
+
       db.collection('posts')
         .doc(fields.id)
         .set({
@@ -110,7 +113,7 @@ app.post('/createPost', (request, response) => {
           caption: fields.caption,
           location: fields.location,
           date: parseInt(fields.date),
-          imageUrl: `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${uploadedFile.name}?alt=media&token=${uuid}`,
+          imageUrl: imageUrl,
         })
         .then(() => {
           sendPushNotification();
@@ -143,6 +146,7 @@ app.post('/createPost', (request, response) => {
               title: 'New Vivify Post!',
               body: 'A new post has been added! Check it out!',
               openUrl: '/',
+              imageUrl: imageUrl,
             };
 
             let payload = JSON.stringify(pushContent);

@@ -169,44 +169,55 @@ const locationError = () => {
   locationLoading.value = false;
 };
 
+const addPostError = () => {
+  $q.dialog({
+    title: 'Error',
+    message: 'Sorry, could not create post!',
+  });
+};
+
 const addPost = () => {
   $q.loading.show({});
 
-  const formData = new FormData();
-  formData.append('id', postData.id);
-  formData.append('caption', postData.caption);
-  formData.append('location', postData.location);
-  formData.append('date', postData.date);
-  formData.append('file', postData.photo, postData.id + '.png');
+  let postCreated = $q.localStorage.getItem('postCreated');
 
-  api
-    .post('/createPost', formData)
-    .then((response) => {
-      router.push('/');
-      $q.notify({
-        message: 'Post created.',
-        actions: [{ label: 'Dismiss', color: 'white' }],
-      });
-    })
-    .catch((err) => {
-      if (!navigator.onLine && backgroundSyncSupported.value) {
-        $q.notify('Post created offline.');
+  if ($q.platform.is.android && !postCreated && !navigator.onLine) {
+    addPostError();
+  } else {
+    const formData = new FormData();
+    formData.append('id', postData.id);
+    formData.append('caption', postData.caption);
+    formData.append('location', postData.location);
+    formData.append('date', postData.date);
+    formData.append('file', postData.photo, postData.id + '.png');
+
+    api
+      .post('/createPost', formData)
+      .then((response) => {
+        $q.localStorage.set('postCreated', true);
         router.push('/');
-      } else {
-        $q.dialog({
-          title: 'Error',
-          message: 'Sorry, could not create post!',
+        $q.notify({
+          message: 'Post created.',
+          actions: [{ label: 'Dismiss', color: 'white' }],
         });
-      }
-    })
-    .finally(() => {
-      $q.loading.hide();
-      if ($q.platform.is.safari) {
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1000);
-      }
-    });
+      })
+      .catch((err) => {
+        if (!navigator.onLine && backgroundSyncSupported.value && postCreated) {
+          $q.notify('Post created offline.');
+          router.push('/');
+        } else {
+          addPostError();
+        }
+      })
+      .finally(() => {
+        $q.loading.hide();
+        if ($q.platform.is.safari) {
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        }
+      });
+  }
 };
 
 onMounted(() => {

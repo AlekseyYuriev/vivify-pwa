@@ -147,7 +147,7 @@ const createPushSubscription = (reg) => {
 };
 
 const displayGrantedNotification = () => {
-  // new Notification('You are ow subscribed to notifications', {
+  // new Notification('You are now subscribed to notifications', {
   //   body: 'Thanks for subscribing!',
   //   icon: 'icons/android/android-launchericon-96-96.png',
   //   image: 'icons/windows11/Wide310x150Logo.scale-100.png',

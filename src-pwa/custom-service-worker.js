@@ -104,6 +104,7 @@ self.addEventListener('push', (event) => {
         body: data.body,
         icon: 'icons/android/android-launchericon-96-96.png',
         badge: 'icons/android/android-launchericon-96-96.png',
+        image: data.imageUrl,
         data: {
           openUrl: data.openUrl,
         },
