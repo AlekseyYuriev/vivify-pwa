@@ -37,7 +37,8 @@ if (backgroundSyncSupported) {
 
           // Put the entry back in the queue and re-throw the error:
           await queue.unshiftRequest(entry);
-          throw error;
+          console.error('Replay failed, requeued.', error);
+          return;
         }
       }
     },
@@ -71,13 +72,15 @@ if (backgroundSyncSupported) {
       return;
     }
 
+    const requestClone = event.request.clone();
+
     const bgSyncLogic = async () => {
       try {
-        const response = await fetch(event.request.clone());
+        const response = await fetch(event.request);
         return response;
       } catch (error) {
-        await createPostQueue.pushRequest({ request: event.request });
-        return error;
+        await createPostQueue.pushRequest({ request: requestClone });
+        return Response.error();
       }
     };
 
