@@ -177,14 +177,15 @@ const addPostError = () => {
 };
 
 const addPost = () => {
-  $q.loading.show({});
+  $q.loading.show();
 
   let postCreated = $q.localStorage.getItem('postCreated');
 
   if ($q.platform.is.android && !postCreated && !navigator.onLine) {
     addPostError();
+    $q.loading.hide();
   } else {
-    const formData = new FormData();
+    let formData = new FormData();
     formData.append('id', postData.id);
     formData.append('caption', postData.caption);
     formData.append('location', postData.location);
@@ -197,9 +198,15 @@ const addPost = () => {
         $q.localStorage.set('postCreated', true);
         router.push('/');
         $q.notify({
-          message: 'Post created.',
+          message: 'Post created!',
           actions: [{ label: 'Dismiss', color: 'white' }],
         });
+        $q.loading.hide();
+        if ($q.platform.is.safari) {
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        }
       })
       .catch((err) => {
         if (!navigator.onLine && backgroundSyncSupported.value && postCreated) {
@@ -208,14 +215,7 @@ const addPost = () => {
         } else {
           addPostError();
         }
-      })
-      .finally(() => {
         $q.loading.hide();
-        if ($q.platform.is.safari) {
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 1000);
-        }
       });
   }
 };
@@ -300,10 +300,11 @@ onBeforeUnmount(() => {
         <q-btn
           @click="addPost()"
           :disable="!postData.caption || !postData.photo"
-          unelevated
-          rounded
+          class="q-mb-lg"
           color="primary"
           label="Post Image"
+          rounded
+          unelevated
         />
       </div>
     </div>

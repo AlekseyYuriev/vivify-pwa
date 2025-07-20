@@ -2,42 +2,49 @@
 import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 
-let deferredPrompt;
+const deferredPrompt = ref(null);
 const $q = useQuasar();
 
 const showAppInstallBanner = ref(false);
-
-const installApp = async () => {
-  // Hide the app provided install promotion
-  showAppInstallBanner.value = false;
-  // Show the install prompt
-  deferredPrompt.prompt();
-  // Wait for the user to respond to the prompt
-  const { outcome } = await deferredPrompt.userChoice;
-  if (outcome === 'accepted') {
-    neverShowAppInstallBanner();
-  }
-};
 
 const neverShowAppInstallBanner = () => {
   showAppInstallBanner.value = false;
   $q.localStorage.set('neverShowAppInstallBanner', true);
 };
 
+const installApp = () => {
+  // Hide the app provided install promotion
+  showAppInstallBanner.value = false;
+  // Show the install prompt
+  deferredPrompt.value.prompt();
+  // Wait for the user to respond to the prompt
+  deferredPrompt.value.userChoice.then((choiceResult) => {
+    if (choiceResult.outcome === 'accepted') {
+      neverShowAppInstallBanner();
+    } else {
+      console.log('User dismissed the install prompt');
+    }
+  });
+};
+
 onMounted(() => {
   // Check if user chose "Never"
-  if ($q.localStorage.getItem('neverShowAppInstallBanner')) return;
+  let neverShowAppInstallBanner = $q.localStorage.getItem(
+    'neverShowAppInstallBanner'
+  );
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent the mini-infobar from appearing on mobile
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-    // Update UI notify the user they can install the PWA
-    setTimeout(() => {
-      showAppInstallBanner.value = true;
-    }, 3000);
-  });
+  if (!neverShowAppInstallBanner) {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      deferredPrompt.value = e;
+      // Update UI notify the user they can install the PWA
+      setTimeout(() => {
+        showAppInstallBanner.value = true;
+      }, 3000);
+    });
+  }
 });
 </script>
 
@@ -145,4 +152,8 @@ onMounted(() => {
 .q-footer
   .q-tab__icon
     font-size: 30px
+.platform-ios
+  .q-footer
+    padding-bottom: constant(safe-area-inset-bottom)
+    padding-bottom: env(safe-area-inset-bottom)
 </style>
