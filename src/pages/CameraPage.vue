@@ -54,13 +54,7 @@ const captureImage = () => {
   canvasElement.height = videoElement.getBoundingClientRect().height;
 
   const context = canvasElement.getContext('2d');
-  context.drawImage(
-    videoElement,
-    0,
-    0,
-    canvasElement.width,
-    canvasElement.height
-  );
+  context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
   imageCaptured.value = true;
   postData.photo = dataURItoBlob(canvasElement.toDataURL());
   disableCamera();
@@ -131,15 +125,12 @@ const getLocation = () => {
 
 const getCityAndCountry = (position) => {
   axios
-    .get(
-      `https://geocode.xyz/${position.coords.latitude},${position.coords.longitude}`,
-      {
-        params: {
-          json: 1,
-          auth: import.meta.env.VITE_GEOCODE_API_KEY,
-        },
-      }
-    )
+    .get(`https://geocode.xyz/${position.coords.latitude},${position.coords.longitude}`, {
+      params: {
+        json: 1,
+        auth: import.meta.env.VITE_GEOCODE_API_KEY,
+      },
+    })
     .then((result) => {
       locationSuccess(result);
     })
@@ -185,7 +176,7 @@ const addPost = () => {
     addPostError();
     $q.loading.hide();
   } else {
-    let formData = new FormData();
+    const formData = new FormData();
     formData.append('id', postData.id);
     formData.append('caption', postData.caption);
     formData.append('location', postData.location);
@@ -232,19 +223,8 @@ onBeforeUnmount(() => {
 <template>
   <q-page class="constrain-more q-pa-md">
     <div class="camera-frame q-pa-md">
-      <video
-        v-show="!imageCaptured"
-        ref="video"
-        class="full-width"
-        autoplay
-        playsinline
-      />
-      <canvas
-        v-show="imageCaptured"
-        ref="canvas"
-        class="full-width"
-        height="240"
-      />
+      <video v-show="!imageCaptured" ref="video" class="full-width" autoplay playsinline />
+      <canvas v-show="imageCaptured" ref="canvas" class="full-width" height="240" />
     </div>
     <div class="text-center q-pa-md">
       <q-btn
@@ -269,12 +249,7 @@ onBeforeUnmount(() => {
         </template>
       </q-file>
       <div class="row justify-center q-ma-md">
-        <q-input
-          v-model="postData.caption"
-          label="Caption *"
-          class="col col-sm-6"
-          dense
-        />
+        <q-input v-model="postData.caption" label="Caption *" class="col col-sm-6" dense />
       </div>
       <div class="row justify-center q-ma-md">
         <q-input

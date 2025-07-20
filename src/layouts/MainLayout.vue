@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useQuasar } from 'quasar';
 
-const deferredPrompt = ref(null);
+let deferredPrompt;
 const $q = useQuasar();
 
 const showAppInstallBanner = ref(false);
@@ -12,37 +12,32 @@ const neverShowAppInstallBanner = () => {
   $q.localStorage.set('neverShowAppInstallBanner', true);
 };
 
-const installApp = () => {
+const installApp = async () => {
   // Hide the app provided install promotion
   showAppInstallBanner.value = false;
   // Show the install prompt
-  deferredPrompt.value.prompt();
+  deferredPrompt.prompt();
   // Wait for the user to respond to the prompt
-  deferredPrompt.value.userChoice.then((choiceResult) => {
-    if (choiceResult.outcome === 'accepted') {
-      neverShowAppInstallBanner();
-    } else {
-      console.log('User dismissed the install prompt');
-    }
-  });
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    neverShowAppInstallBanner();
+  }
 };
 
 onMounted(() => {
   // Check if user chose "Never"
-  let neverShowAppInstallBanner = $q.localStorage.getItem('neverShowAppInstallBanner');
+  if ($q.localStorage.getItem('neverShowAppInstallBanner')) return;
 
-  if (!neverShowAppInstallBanner) {
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      // Stash the event so it can be triggered later.
-      deferredPrompt.value = e;
-      // Update UI notify the user they can install the PWA
-      setTimeout(() => {
-        showAppInstallBanner.value = true;
-      }, 3000);
-    });
-  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e;
+    // Update UI notify the user they can install the PWA
+    setTimeout(() => {
+      showAppInstallBanner.value = true;
+    }, 3000);
+  });
 });
 </script>
 

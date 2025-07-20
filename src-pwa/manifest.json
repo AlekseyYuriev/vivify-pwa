@@ -1,9 +1,8 @@
 {
-  "name": "Vivify",
+  "name": "Vivify - Your Moments, Alive",
   "short_name": "Vivify",
   "description": "Bring your moments to life. Capture and share photos with friends in a simple, beautiful feed focused on genuine connection.",
   "display": "standalone",
-  "start_url": "/",
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#212121",
