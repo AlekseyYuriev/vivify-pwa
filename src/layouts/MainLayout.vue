@@ -29,9 +29,7 @@ const installApp = () => {
 
 onMounted(() => {
   // Check if user chose "Never"
-  let neverShowAppInstallBanner = $q.localStorage.getItem(
-    'neverShowAppInstallBanner'
-  );
+  let neverShowAppInstallBanner = $q.localStorage.getItem('neverShowAppInstallBanner');
 
   if (!neverShowAppInstallBanner) {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -62,9 +60,7 @@ onMounted(() => {
           dense
         />
         <q-separator class="large-screen-only" vertical spaced />
-        <q-toolbar-title class="text-grand-hotel text-bold tracking-wide">
-          Vivify
-        </q-toolbar-title>
+        <q-toolbar-title class="text-grand-hotel text-bold tracking-wide"> Vivify </q-toolbar-title>
         <q-btn
           to="/"
           class="large-screen-only inline-flex"
@@ -78,30 +74,20 @@ onMounted(() => {
     </q-header>
 
     <q-footer class="bg-white" bordered>
-      <transition
-        appear
-        enter-active-class="animated fadeIn"
-        leave-active-class="animated fadeOut"
-      >
+      <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
         <div v-if="showAppInstallBanner" class="banner-container bg-primary">
           <div class="constrain">
             <q-banner inline-actions dense class="bg-primary text-white">
               <template v-slot:avatar>
                 <q-avatar size="40px">
-                  <img src="icons/android/android-launchericon-96-96.png" />
+                  <img src="icons/favicon-96x96.png" />
                 </q-avatar>
               </template>
 
               <b>Install Vivify?</b>
 
               <template v-slot:action>
-                <q-btn
-                  @click="installApp"
-                  flat
-                  dense
-                  label="Yes"
-                  class="q-px-sm"
-                />
+                <q-btn @click="installApp" flat dense label="Yes" class="q-px-sm" />
                 <q-btn
                   @click="showAppInstallBanner = false"
                   flat
@@ -149,6 +135,11 @@ onMounted(() => {
   font-size: 30px
   @media (max-width: $breakpoint-xs-max)
     text-align: center
+.constrain
+  .q-banner__avatar
+    .q-avatar
+      .q-avatar__content
+        border-radius: 12px
 .q-footer
   .q-tab__icon
     font-size: 30px

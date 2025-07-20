@@ -10,13 +10,9 @@ const posts = ref([]);
 const loadingPosts = ref(false);
 const showNotificationsBanner = ref(false);
 
-const seviceWorkerSupported = computed(() =>
-  'serviceWorker' in navigator ? true : false
-);
+const seviceWorkerSupported = computed(() => ('serviceWorker' in navigator ? true : false));
 
-const pushNotificationsSupported = computed(() =>
-  'PushManager' in window ? true : false
-);
+const pushNotificationsSupported = computed(() => ('PushManager' in window ? true : false));
 
 const getPosts = () => {
   loadingPosts.value = true;
@@ -46,10 +42,7 @@ const getOfflinePosts = async () => {
 
     failedRequests.forEach((failedRequest) => {
       if (failedRequest.queueName === 'createPostQueue') {
-        let request = new Request(
-          failedRequest.requestData.url,
-          failedRequest.requestData
-        );
+        let request = new Request(failedRequest.requestData.url, failedRequest.requestData);
         request.formData().then((formData) => {
           let offlinePost = {};
 
@@ -79,9 +72,7 @@ const listenForOfflinePostUploaded = () => {
     const channel = new BroadcastChannel('sw-messages');
     channel.addEventListener('message', (event) => {
       if (event.data.msg === 'offline-post-uploaded') {
-        let offlinePostCount = posts.value.filter(
-          (post) => post.offline === true
-        ).length;
+        let offlinePostCount = posts.value.filter((post) => post.offline === true).length;
         posts.value[offlinePostCount - 1].offline = false;
       }
     });
@@ -103,7 +94,6 @@ const enableNotifications = async () => {
     Notification.requestPermission((result) => {
       neverShowNotificationsBanner();
       if (result === 'granted') {
-        // displayGrantedNotification();
         checkForExistingPushSubscription();
       }
     });
@@ -147,42 +137,18 @@ const createPushSubscription = (reg) => {
 };
 
 const displayGrantedNotification = () => {
-  // new Notification('You are now subscribed to notifications', {
-  //   body: 'Thanks for subscribing!',
-  //   icon: 'icons/android/android-launchericon-96-96.png',
-  //   image: 'icons/windows11/Wide310x150Logo.scale-100.png',
-  //   badge: 'icons/android/android-launchericon-96-96.png',
-  //   dir: 'ltr',
-  //   lang: 'en-US',
-  //   vibrate: [100, 50, 200],
-  //   tag: 'confirm-notification',
-  //   renotify: true,
-  // });
-
   if (seviceWorkerSupported.value && pushNotificationsSupported.value) {
     navigator.serviceWorker.ready.then((swreg) => {
       swreg.showNotification('You are now subscribed to notifications', {
         body: 'Thanks for subscribing!',
-        icon: 'icons/android/android-launchericon-96-96.png',
-        image: 'icons/windows11/Wide310x150Logo.scale-100.png',
-        badge: 'icons/android/android-launchericon-96-96.png',
+        icon: 'icons/favicon-96x96.png',
+        image: 'icons/favicon-96x96.png',
+        badge: 'icons/favicon-96x96.png',
         dir: 'ltr',
         lang: 'en-US',
         vibrate: [100, 50, 200],
         tag: 'confirm-notification',
         renotify: true,
-        actions: [
-          {
-            action: 'hello',
-            title: 'Hello',
-            icon: 'icons/android/android-launchericon-96-96.png',
-          },
-          {
-            action: 'goodbye',
-            title: 'Goodbye',
-            icon: 'icons/android/android-launchericon-96-96.png',
-          },
-        ],
       });
     });
   }
@@ -205,11 +171,7 @@ onMounted(() => {
 
 <template>
   <q-page class="constrain q-pa-md">
-    <transition
-      appear
-      enter-active-class="animated fadeIn"
-      leave-active-class="animated fadeOut"
-    >
+    <transition appear enter-active-class="animated fadeIn" leave-active-class="animated fadeOut">
       <div
         v-if="showNotificationsBanner && pushNotificationsSupported"
         class="banner-container bg-primary"
@@ -263,11 +225,7 @@ onMounted(() => {
             flat
             bordered
           >
-            <q-badge
-              v-if="post.offline"
-              color="red"
-              class="badge-offline absolute-top-right"
-            >
+            <q-badge v-if="post.offline" color="red" class="badge-offline absolute-top-right">
               Stored offline
             </q-badge>
             <q-item>
@@ -303,13 +261,7 @@ onMounted(() => {
           <h5 class="text-center text-grey">No posts yet.</h5>
         </template>
         <template v-else>
-          <q-card
-            v-for="(item, index) in 3"
-            :key="index"
-            class="card-post q-mb-md"
-            flat
-            bordered
-          >
+          <q-card v-for="(item, index) in 3" :key="index" class="card-post q-mb-md" flat bordered>
             <q-item>
               <q-item-section avatar>
                 <q-skeleton type="QAvatar" animation="fade" size="40px" />
@@ -329,12 +281,7 @@ onMounted(() => {
 
             <q-card-section>
               <q-skeleton type="text" class="text-subtitle2" animation="fade" />
-              <q-skeleton
-                type="text"
-                width="50%"
-                class="text-subtitle2"
-                animation="fade"
-              />
+              <q-skeleton type="text" width="50%" class="text-subtitle2" animation="fade" />
             </q-card-section>
           </q-card>
         </template>

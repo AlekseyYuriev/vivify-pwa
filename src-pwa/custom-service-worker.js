@@ -8,11 +8,7 @@
 
 import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import {
-  StaleWhileRevalidate,
-  CacheFirst,
-  NetworkFirst,
-} from 'workbox-strategies';
+import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 import { Queue } from 'workbox-background-sync';
@@ -64,15 +60,9 @@ registerRoute(
   })
 );
 
-registerRoute(
-  ({ url }) => url.pathname.startsWith('/posts'),
-  new NetworkFirst()
-);
+registerRoute(({ url }) => url.pathname.startsWith('/posts'), new NetworkFirst());
 
-registerRoute(
-  ({ url }) => url.href.startsWith('http'),
-  new StaleWhileRevalidate()
-);
+registerRoute(({ url }) => url.href.startsWith('http'), new StaleWhileRevalidate());
 
 //events - fetch
 if (backgroundSyncSupported) {
@@ -102,8 +92,8 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
       self.registration.showNotification(data.title, {
         body: data.body,
-        icon: 'icons/android/android-launchericon-96-96.png',
-        badge: 'icons/android/android-launchericon-96-96.png',
+        icon: 'icons/favicon-96x96.png',
+        badge: 'icons/favicon-96x96.png',
         image: data.imageUrl,
         data: {
           openUrl: data.openUrl,
@@ -116,19 +106,8 @@ self.addEventListener('push', (event) => {
 //events - notifications
 self.addEventListener('notificationclick', (event) => {
   let notification = event.notification;
-  let action = event.action;
 
   notification.close();
-
-  if (action === 'hello') {
-    console.log('hello button clicked');
-    return;
-  }
-
-  if (action === 'goodbye') {
-    console.log('goodbye button clicked');
-    return;
-  }
 
   const openWindowPromise = (async () => {
     // Use the URL from the push data, but have a fallback to the root URL.
@@ -141,9 +120,7 @@ self.addEventListener('notificationclick', (event) => {
     });
 
     // Try to find a visible window to focus.
-    const clientToFocus = allClients.find(
-      (client) => client.visibilityState === 'visible'
-    );
+    const clientToFocus = allClients.find((client) => client.visibilityState === 'visible');
 
     if (clientToFocus) {
       // If we found a visible window, navigate it to the correct URL and focus it.
