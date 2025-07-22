@@ -28,16 +28,18 @@ onMounted(() => {
   // Check if user chose "Never"
   if ($q.localStorage.getItem('neverShowAppInstallBanner')) return;
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevent the mini-infobar from appearing on mobile
-    e.preventDefault();
-    // Stash the event so it can be triggered later.
-    deferredPrompt = e;
-    // Update UI notify the user they can install the PWA
-    setTimeout(() => {
-      showAppInstallBanner.value = true;
-    }, 3000);
-  });
+  if ('BeforeInstallPromptEvent' in window) {
+    window.addEventListener('beforeinstallprompt', (event) => {
+      // Prevent the mini-infobar from appearing on mobile
+      event.preventDefault();
+      // Stash the event so it can be triggered later.
+      deferredPrompt = event;
+      // Update UI notify the user they can install the PWA
+      setTimeout(() => {
+        showAppInstallBanner.value = true;
+      }, 3000);
+    });
+  }
 });
 </script>
 
